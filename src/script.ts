@@ -6,6 +6,11 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { times } from "lodash";
 
+interface CustomMesh {
+    mesh : THREE.Mesh;
+    velocity: THREE.Vector3;
+}
+
 const top = new THREE.Vector3(1,0,0);
 const bottom = new THREE.Vector3(-1,0,0);
 const left = new THREE.Vector3(0,0,-1);
@@ -17,7 +22,7 @@ const leftPosition = new THREE.Vector3(-2,0,0);
 const rightPosition = new THREE.Vector3(2,0,0);
 
 
-let texts : THREE.Mesh[] = [];
+let texts : CustomMesh[] = [];
 // Scene
 const scene = new THREE.Scene();
 
@@ -37,7 +42,7 @@ fontLoader.load(
            {position: bottomPosition, rotation: bottom}
        ];
 
-       configs.map(({position, rotation}) => {
+       configs.map(({ position, rotation }) => {
            times(10, Number).map((it: number) => {
                let textPosition = position.clone();
                textPosition.z = -it;
@@ -78,11 +83,13 @@ function tick()
     // Render
     renderer.render(scene, camera);
     for(let i = 0; i < texts.length; i++) {
-        texts[i].position.z -= 0.01;
-        texts[i].scale.x -= 0.001;
-        if(texts[i].position.z <= -10.0) {
-            texts[i].position.z = 0;
-            texts[i].scale.x = 1;
+        const { x, y, z } = texts[i].velocity;
+        const { x: meshX, y: meshY, z: meshZ } = texts[i].mesh.position;
+        texts[i].mesh.position.set(meshX + x, meshY + y, meshZ + z);
+        texts[i].mesh.scale.x -= 0.001;
+        if(texts[i].mesh.position.z <= -10.0) {
+            texts[i].mesh.position.z = 0;
+            texts[i].mesh.scale.x = 1;
         }
     }
 
@@ -154,14 +161,8 @@ function instantiateText(font: any, material: THREE.MeshBasicMaterial, position:
         let text = new THREE.Mesh(textGeometry, material);
         text.scale.set(1,1, 0.1);
         text.position.set(position.x, position.y, position.z );
-        texts.push(text);
-        text.rotateOnAxis(rotationVector, (Math.PI / 2))
+        texts.push({ mesh: text, velocity: new THREE.Vector3(0, 0, -0.01) });
+        text.rotateOnAxis(rotationVector, (Math.PI / 2));
         //text.rotateOnAxis(new THREE.Vector3(1,0,0), -(Math.PI / 4));
-        /**
-         * Animate
-         */
-        //gsap.to(text.position, { duration: 2, z: text.position.z - 3, repeat:-1 });
-        //gsap.to(text.scale, { duration: 2, x: 0.1, repeat:-1 });
-
         scene.add(text)
 }
