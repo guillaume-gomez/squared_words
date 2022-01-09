@@ -9,6 +9,7 @@ import { times } from "lodash";
 interface CustomMesh {
     mesh : THREE.Mesh;
     velocity: THREE.Vector3;
+    
 }
 
 const top = new THREE.Vector3(1,0,0);
@@ -20,6 +21,12 @@ const topPosition = new THREE.Vector3(0,2,0);
 const bottomPosition = new THREE.Vector3(0,-2,0);
 const leftPosition = new THREE.Vector3(-2,0,0);
 const rightPosition = new THREE.Vector3(2,0,0);
+
+const ZSpeed = -0.01;
+const topVelocity = new THREE.Vector3(0, -ZSpeed, ZSpeed);
+const bottomVelocity = new THREE.Vector3(0, ZSpeed, ZSpeed);
+const leftVelocity = new THREE.Vector3(-ZSpeed, 0, ZSpeed);
+const rightVelocity = new THREE.Vector3(ZSpeed, 0, ZSpeed);
 
 
 let texts : CustomMesh[] = [];
