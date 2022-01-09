@@ -9,7 +9,7 @@ import { times } from "lodash";
 interface CustomMesh {
     mesh : THREE.Mesh;
     velocity: THREE.Vector3;
-    
+    originalPosition: THREE.Vector3;
 }
 
 const top = new THREE.Vector3(1,0,0);
@@ -23,15 +23,17 @@ const leftPosition = new THREE.Vector3(-2,0,0);
 const rightPosition = new THREE.Vector3(2,0,0);
 
 const ZSpeed = -0.01;
-const topVelocity = new THREE.Vector3(0, -ZSpeed, ZSpeed);
-const bottomVelocity = new THREE.Vector3(0, ZSpeed, ZSpeed);
-const leftVelocity = new THREE.Vector3(-ZSpeed, 0, ZSpeed);
-const rightVelocity = new THREE.Vector3(ZSpeed, 0, ZSpeed);
+const YSpeed = 0.002;
+const topVelocity = new THREE.Vector3(0, -YSpeed, ZSpeed);
+const bottomVelocity = new THREE.Vector3(0, YSpeed, ZSpeed);
+const leftVelocity = new THREE.Vector3(YSpeed, 0, ZSpeed);
+const rightVelocity = new THREE.Vector3(-YSpeed, 0, ZSpeed);
 
 
 let texts : CustomMesh[] = [];
 // Scene
-const scene = new THREE.Scene();
+let scene = new THREE.Scene();
+scene.background = new THREE.Color(0x723bf2);
 
 // load font
 const fontLoader = new FontLoader();
@@ -40,20 +42,27 @@ fontLoader.load(
     '/fonts/helvetiker_regular.typeface.json',
     (font) =>
     {
-       const textMaterial = new THREE.MeshBasicMaterial({ wireframe: false, color: 0x0ff01d } )
+       const textMaterial = new THREE.MeshBasicMaterial({ wireframe: false, color: 0xe85eb0 } )
 
        const configs = [
-           {position: topPosition, rotation: top},
-           {position: leftPosition, rotation: left},
-           {position: rightPosition, rotation: right},
-           {position: bottomPosition, rotation: bottom}
+           { position: topPosition, velocity: topVelocity, rotation: top },
+           { position: leftPosition, velocity: leftVelocity, rotation: left },
+           { position: rightPosition, velocity: rightVelocity, rotation: right },
+           { position: bottomPosition, velocity: bottomVelocity, rotation: bottom }
        ];
 
-       configs.map(({ position, rotation }) => {
-           times(10, Number).map((it: number) => {
-               let textPosition = position.clone();
-               textPosition.z = -it;
-               instantiateText(font, textMaterial, textPosition, rotation);
+       configs.map(({ position, rotation, velocity }) => {
+           times(20, Number).map((it: number) => {
+
+               let text = instantiateText(font, textMaterial);
+               text.position.set(position.x, position.y, -it * 0.5 );
+               text.scale.set((20 - it) / 20,1, 0.1);
+
+               text.rotateOnAxis(rotation, (Math.PI / 2));
+        
+
+               texts.push({ mesh: text, velocity, originalPosition: position });
+               scene.add(text);
            })
 
        })
@@ -95,7 +104,8 @@ function tick()
         texts[i].mesh.position.set(meshX + x, meshY + y, meshZ + z);
         texts[i].mesh.scale.x -= 0.001;
         if(texts[i].mesh.position.z <= -10.0) {
-            texts[i].mesh.position.z = 0;
+            const { x, y, z } = texts[i].originalPosition;
+            texts[i].mesh.position.set(x, y ,z);
             texts[i].mesh.scale.x = 1;
         }
     }
@@ -149,7 +159,10 @@ window.addEventListener('dblclick', () =>
     }
 })
 
-function instantiateText(font: any, material: THREE.MeshBasicMaterial, position: THREE.Vector3, rotationVector: THREE.Vector3) {
+function instantiateText(
+    font: any,
+    material: THREE.MeshBasicMaterial,
+    ) : THREE.Mesh {
     const textGeometry = new TextGeometry(
             'Hello Three.js',
             {
@@ -165,11 +178,8 @@ function instantiateText(font: any, material: THREE.MeshBasicMaterial, position:
             }
         )
         textGeometry.center();
+        console.log(textGeometry)
         let text = new THREE.Mesh(textGeometry, material);
-        text.scale.set(1,1, 0.1);
-        text.position.set(position.x, position.y, position.z );
-        texts.push({ mesh: text, velocity: new THREE.Vector3(0, 0, -0.01) });
-        text.rotateOnAxis(rotationVector, (Math.PI / 2));
         //text.rotateOnAxis(new THREE.Vector3(1,0,0), -(Math.PI / 4));
-        scene.add(text)
+        return text;
 }
