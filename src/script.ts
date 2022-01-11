@@ -17,10 +17,10 @@ const bottom = new THREE.Vector3(-1,0,0);
 const left = new THREE.Vector3(0,0,-1);
 const right = new THREE.Vector3(0,0,1);
 
-const topPosition = new THREE.Vector3(0,2,0);
-const bottomPosition = new THREE.Vector3(0,-2,0);
-const leftPosition = new THREE.Vector3(-2,0,0);
-const rightPosition = new THREE.Vector3(2,0,0);
+const topPosition = new THREE.Vector3(0,2.1,0);
+const bottomPosition = new THREE.Vector3(0,-2.1,0);
+const leftPosition = new THREE.Vector3(-2.1,0,0);
+const rightPosition = new THREE.Vector3(2.1,0,0);
 
 const ZSpeed = -0.01;
 const YSpeed = 0.002;
@@ -42,7 +42,7 @@ fontLoader.load(
     '/fonts/helvetiker_regular.typeface.json',
     (font) =>
     {
-       const textMaterial = new THREE.MeshBasicMaterial({ wireframe: false, color: 0xe85eb0 } )
+       const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: 0xe85eb0 } )
 
        const configs = [
            { position: topPosition, velocity: topVelocity, rotation: top },
@@ -56,7 +56,7 @@ fontLoader.load(
 
                let text = instantiateText(font, textMaterial);
                text.position.set(position.x, position.y, -it * 0.5 );
-               text.scale.set((20 - it) / 20,1, 0.1);
+               text.scale.set((20 - it) / 20,1, 0.05);
 
                text.rotateOnAxis(rotation, (Math.PI / 2));
         
@@ -77,6 +77,17 @@ const sizes = {
 // Axe Helper
 const axesHelper = new THREE.AxesHelper(2);
 scene.add(axesHelper);
+
+// lights
+const pointLight = new THREE.PointLight( 0xf794ca, 1, 25 );
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.75)
+scene.add(ambientLight)
+pointLight.position.set( 0, 0, 1 );
+scene.add( pointLight );
+
+const sphereSize = 10;
+const pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
+scene.add( pointLightHelper );
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
@@ -159,9 +170,12 @@ window.addEventListener('dblclick', () =>
     }
 })
 
+
+
+
 function instantiateText(
     font: any,
-    material: THREE.MeshBasicMaterial,
+    material: THREE.MeshStandardMaterial,
     ) : THREE.Mesh {
     const textGeometry = new TextGeometry(
             'Hello Three.js',
