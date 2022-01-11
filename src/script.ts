@@ -12,18 +12,22 @@ interface CustomMesh {
     originalPosition: THREE.Vector3;
 }
 
+const nbText = 10;
+const depth = 10.0;
+const ZSpeed = -0.01;
+const YSpeed = 0.002;
+
+
 const top = new THREE.Vector3(1,0,0);
 const bottom = new THREE.Vector3(-1,0,0);
 const left = new THREE.Vector3(0,0,-1);
 const right = new THREE.Vector3(0,0,1);
 
-const topPosition = new THREE.Vector3(0,2.1,0);
-const bottomPosition = new THREE.Vector3(0,-2.1,0);
-const leftPosition = new THREE.Vector3(-2.1,0,0);
-const rightPosition = new THREE.Vector3(2.1,0,0);
+const topPosition = new THREE.Vector3(0,3,0);
+const bottomPosition = new THREE.Vector3(0,-3,0);
+const leftPosition = new THREE.Vector3(-3,0,0);
+const rightPosition = new THREE.Vector3(3,0,0);
 
-const ZSpeed = -0.01;
-const YSpeed = 0.002;
 const topVelocity = new THREE.Vector3(0, -YSpeed, ZSpeed);
 const bottomVelocity = new THREE.Vector3(0, YSpeed, ZSpeed);
 const leftVelocity = new THREE.Vector3(YSpeed, 0, ZSpeed);
@@ -51,11 +55,14 @@ fontLoader.load(
            { position: bottomPosition, velocity: bottomVelocity, rotation: bottom }
        ];
 
+       const interval = depth / nbText;
        configs.map(({ position, rotation, velocity }) => {
-           times(20, Number).map((it: number) => {
+
+           times(nbText, Number).map((it: number) => {
+
 
                let text = instantiateText(font, textMaterial);
-               text.position.set(position.x, position.y, -it * 0.5 );
+               text.position.set(position.x - (position.x * it * interval * 0.1), position.y - (position.y * it * interval * 0.1), -it * interval );
                text.scale.set((20 - it) / 20,1, 0.05);
 
                text.rotateOnAxis(rotation, (Math.PI / 2));
@@ -75,8 +82,8 @@ const sizes = {
     height: window.innerHeight
 }
 // Axe Helper
-const axesHelper = new THREE.AxesHelper(2);
-scene.add(axesHelper);
+//const axesHelper = new THREE.AxesHelper(2);
+//scene.add(axesHelper);
 
 // lights
 const pointLight = new THREE.PointLight( 0xf794ca, 1, 25 );
@@ -87,7 +94,7 @@ scene.add( pointLight );
 
 const sphereSize = 10;
 const pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
-scene.add( pointLightHelper );
+//scene.add( pointLightHelper );
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
@@ -114,7 +121,7 @@ function tick()
         const { x: meshX, y: meshY, z: meshZ } = texts[i].mesh.position;
         texts[i].mesh.position.set(meshX + x, meshY + y, meshZ + z);
         texts[i].mesh.scale.x -= 0.001;
-        if(texts[i].mesh.position.z <= -10.0) {
+        if(texts[i].mesh.position.z <= -depth) {
             const { x, y, z } = texts[i].originalPosition;
             texts[i].mesh.position.set(x, y ,z);
             texts[i].mesh.scale.x = 1;
@@ -178,7 +185,7 @@ function instantiateText(
     material: THREE.MeshStandardMaterial,
     ) : THREE.Mesh {
     const textGeometry = new TextGeometry(
-            'Hello Three.js',
+            "Ber cest le meilleur",
             {
                 font: font,
                 size: 0.5,
