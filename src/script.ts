@@ -185,7 +185,7 @@ function instantiateText(
     material: THREE.MeshStandardMaterial,
     ) : THREE.Mesh {
     const textGeometry = new TextGeometry(
-            "Ber cest le meilleur",
+            "Hello  world !",
             {
                 font: font,
                 size: 0.5,
