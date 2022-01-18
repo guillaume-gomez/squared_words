@@ -14,8 +14,9 @@ interface CustomMesh {
 
 const nbText = 10;
 const depth = 10.0;
-const ZSpeed = -0.01;
-const YSpeed = 0.002;
+const ZSpeed = -1;
+const YSpeed = 0.2;
+const textSize = 2.1;
 
 
 const top = new THREE.Vector3(1,0,0);
@@ -23,10 +24,10 @@ const bottom = new THREE.Vector3(-1,0,0);
 const left = new THREE.Vector3(0,0,-1);
 const right = new THREE.Vector3(0,0,1);
 
-const topPosition = new THREE.Vector3(0,3,0);
-const bottomPosition = new THREE.Vector3(0,-3,0);
-const leftPosition = new THREE.Vector3(-3,0,0);
-const rightPosition = new THREE.Vector3(3,0,0);
+const topPosition = new THREE.Vector3(0,textSize,0);
+const bottomPosition = new THREE.Vector3(0,-textSize,0);
+const leftPosition = new THREE.Vector3(-textSize,0,0);
+const rightPosition = new THREE.Vector3(textSize,0,0);
 
 const topVelocity = new THREE.Vector3(0, -YSpeed, ZSpeed);
 const bottomVelocity = new THREE.Vector3(0, YSpeed, ZSpeed);
@@ -111,23 +112,31 @@ renderer.setSize(sizes.width, sizes.height);
 // Controls
 const controls = new OrbitControls( camera, renderer.domElement );
 
-
+const clock = new THREE.Clock();
 function tick()
 {
+    const delta = clock.getDelta();
     // Render
     renderer.render(scene, camera);
     for(let i = 0; i < texts.length; i++) {
         const { x, y, z } = texts[i].velocity;
         const { x: meshX, y: meshY, z: meshZ } = texts[i].mesh.position;
-        texts[i].mesh.position.set(meshX + x, meshY + y, meshZ + z);
-        texts[i].mesh.scale.x -= 0.001;
+
+        const newX = meshX + (x * delta);
+        const newY = meshY + (y * delta);
+        const newZ = meshZ + (z * delta);
+
+
+        texts[i].mesh.position.set(newX, newY, newZ);
         if(texts[i].mesh.position.z <= -depth) {
             const { x, y, z } = texts[i].originalPosition;
-            texts[i].mesh.position.set(x, y ,z);
+            texts[i].mesh.position.set(x, y , z);
             texts[i].mesh.scale.x = 1;
         }
+        //console.log( 1 - (texts[i].originalPosition.z - newZ  )/depth)
+        texts[i].mesh.scale.x = 1 - (texts[i].originalPosition.z - newZ  )/depth;
+        
     }
-
     // Call tick again on the next frame
     window.requestAnimationFrame(tick);
 }
