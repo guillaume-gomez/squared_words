@@ -58,16 +58,13 @@ fontLoader.load(
 
        const interval = depth / nbText;
        configs.map(({ position, rotation, velocity }) => {
-
            times(nbText, Number).map((it: number) => {
-
 
                let text = instantiateText(font, textMaterial);
                text.position.set(position.x - (position.x * it * interval * 0.1), position.y - (position.y * it * interval * 0.1), -it * interval );
                text.scale.set((20 - it) / 20,1, 0.05);
 
                text.rotateOnAxis(rotation, (Math.PI / 2));
-        
 
                texts.push({ mesh: text, velocity, originalPosition: position });
                scene.add(text);
@@ -122,9 +119,9 @@ function tick()
         const { x, y, z } = texts[i].velocity;
         const { x: meshX, y: meshY, z: meshZ } = texts[i].mesh.position;
 
-        const newX = meshX + (x * delta);
-        const newY = meshY + (y * delta);
         const newZ = meshZ + (z * delta);
+        const newY = /*meshY + (y * delta);*/  texts[i].originalPosition.y - texts[i].originalPosition.y * (texts[i].originalPosition.z - newZ) /depth;
+        const newX = /*meshX + (x * delta);*/ texts[i].originalPosition.x - texts[i].originalPosition.x * (texts[i].originalPosition.z - newZ) /depth;
 
 
         texts[i].mesh.position.set(newX, newY, newZ);
@@ -134,7 +131,7 @@ function tick()
             texts[i].mesh.scale.x = 1;
         }
         //console.log( 1 - (texts[i].originalPosition.z - newZ  )/depth)
-        texts[i].mesh.scale.x = 1 - (texts[i].originalPosition.z - newZ  )/depth;
+        texts[i].mesh.scale.x = 1 - (texts[i].originalPosition.z - newZ) /depth;
         
     }
     // Call tick again on the next frame
