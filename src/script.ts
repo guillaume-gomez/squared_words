@@ -8,14 +8,12 @@ import { times } from "lodash";
 
 interface CustomMesh {
     mesh : THREE.Mesh;
-    velocity: THREE.Vector3;
     originalPosition: THREE.Vector3;
 }
 
 const nbText = 10;
-const depth = 10.0;
+const depth = 20.0;
 const ZSpeed = -1;
-const YSpeed = 0.2;
 const textSize = 2.1;
 
 
@@ -28,12 +26,6 @@ const topPosition = new THREE.Vector3(0,textSize,0);
 const bottomPosition = new THREE.Vector3(0,-textSize,0);
 const leftPosition = new THREE.Vector3(-textSize,0,0);
 const rightPosition = new THREE.Vector3(textSize,0,0);
-
-const topVelocity = new THREE.Vector3(0, -YSpeed, ZSpeed);
-const bottomVelocity = new THREE.Vector3(0, YSpeed, ZSpeed);
-const leftVelocity = new THREE.Vector3(YSpeed, 0, ZSpeed);
-const rightVelocity = new THREE.Vector3(-YSpeed, 0, ZSpeed);
-
 
 let texts : CustomMesh[] = [];
 // Scene
@@ -50,14 +42,14 @@ fontLoader.load(
        const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: 0xe85eb0 } )
 
        const configs = [
-           { position: topPosition, velocity: topVelocity, rotation: top },
-           { position: leftPosition, velocity: leftVelocity, rotation: left },
-           { position: rightPosition, velocity: rightVelocity, rotation: right },
-           { position: bottomPosition, velocity: bottomVelocity, rotation: bottom }
+           { position: topPosition,   rotation: top },
+           { position: leftPosition,  rotation: left },
+           { position: rightPosition, rotation: right },
+           { position: bottomPosition,rotation: bottom }
        ];
 
        const interval = depth / nbText;
-       configs.map(({ position, rotation, velocity }) => {
+       configs.map(({ position, rotation }) => {
            times(nbText, Number).map((it: number) => {
 
                let text = instantiateText(font, textMaterial);
@@ -66,7 +58,7 @@ fontLoader.load(
 
                text.rotateOnAxis(rotation, (Math.PI / 2));
 
-               texts.push({ mesh: text, velocity, originalPosition: position });
+               texts.push({ mesh: text, originalPosition: position });
                scene.add(text);
            })
 
@@ -116,12 +108,13 @@ function tick()
     // Render
     renderer.render(scene, camera);
     for(let i = 0; i < texts.length; i++) {
-        const { x, y, z } = texts[i].velocity;
         const { x: meshX, y: meshY, z: meshZ } = texts[i].mesh.position;
 
-        const newZ = meshZ + (z * delta);
-        const newY = /*meshY + (y * delta);*/  texts[i].originalPosition.y - texts[i].originalPosition.y * (texts[i].originalPosition.z - newZ) /depth;
-        const newX = /*meshX + (x * delta);*/ texts[i].originalPosition.x - texts[i].originalPosition.x * (texts[i].originalPosition.z - newZ) /depth;
+        const newZ = meshZ + (ZSpeed * delta);
+
+        const zRatio = ( texts[i].originalPosition.z - newZ ) / depth;
+        const newX = texts[i].originalPosition.x - texts[i].originalPosition.x * zRatio;
+        const newY = texts[i].originalPosition.y - texts[i].originalPosition.y * zRatio;
 
 
         texts[i].mesh.position.set(newX, newY, newZ);
@@ -191,7 +184,7 @@ function instantiateText(
     material: THREE.MeshStandardMaterial,
     ) : THREE.Mesh {
     const textGeometry = new TextGeometry(
-            "Hello  world !",
+            "David Lacroix",
             {
                 font: font,
                 size: 0.5,
@@ -205,7 +198,7 @@ function instantiateText(
             }
         )
         textGeometry.center();
-        console.log(textGeometry)
+        console.log(textGeometry.boundingBox.max.x)
         let text = new THREE.Mesh(textGeometry, material);
         //text.rotateOnAxis(new THREE.Vector3(1,0,0), -(Math.PI / 4));
         return text;
