@@ -11,10 +11,9 @@ interface CustomMesh {
     originalPosition: THREE.Vector3;
 }
 
-const nbText = 10;
+const nbText = 20;
 const depth = 20.0;
 const ZSpeed = -1;
-const textSize = 2.1;
 
 
 const top = new THREE.Vector3(1,0,0);
@@ -22,10 +21,10 @@ const bottom = new THREE.Vector3(-1,0,0);
 const left = new THREE.Vector3(0,0,-1);
 const right = new THREE.Vector3(0,0,1);
 
-const topPosition = new THREE.Vector3(0,textSize,0);
-const bottomPosition = new THREE.Vector3(0,-textSize,0);
-const leftPosition = new THREE.Vector3(-textSize,0,0);
-const rightPosition = new THREE.Vector3(textSize,0,0);
+const topPosition = new THREE.Vector3(0,1,0);
+const bottomPosition = new THREE.Vector3(0,-1,0);
+const leftPosition = new THREE.Vector3(-1,0,0);
+const rightPosition = new THREE.Vector3(1,0,0);
 
 let texts : CustomMesh[] = [];
 // Scene
@@ -39,20 +38,23 @@ fontLoader.load(
     '/fonts/helvetiker_regular.typeface.json',
     (font) =>
     {
-       const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: 0xe85eb0 } )
+       const message = "Sometimes I wish I was dead";
+       const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: 0xe85eb0 } );
 
+
+       const textSize = computeWidth(font, message);
        const configs = [
-           { position: topPosition,   rotation: top },
-           { position: leftPosition,  rotation: left },
-           { position: rightPosition, rotation: right },
-           { position: bottomPosition,rotation: bottom }
+           { position: topPosition.multiplyScalar(textSize), rotation: top },
+           { position: leftPosition.multiplyScalar(textSize), rotation: left },
+           { position: rightPosition.multiplyScalar(textSize), rotation: right },
+           { position: bottomPosition.multiplyScalar(textSize), rotation: bottom }
        ];
 
        const interval = depth / nbText;
        configs.map(({ position, rotation }) => {
            times(nbText, Number).map((it: number) => {
 
-               let text = instantiateText(font, textMaterial);
+               let text = instantiateText(font, message, textMaterial);
                text.position.set(position.x - (position.x * it * interval * 0.1), position.y - (position.y * it * interval * 0.1), -it * interval );
                text.scale.set((20 - it) / 20,1, 0.05);
 
@@ -177,29 +179,36 @@ window.addEventListener('dblclick', () =>
 })
 
 
-
+function createGeometry(font: any, message: string): TextGeometry {
+    const textGeometry = new TextGeometry(
+        message,
+        {
+            font: font,
+            size: 0.5,
+            height: 0.2,
+            curveSegments: 12,
+            bevelEnabled: true,
+            bevelThickness: 0.01,
+            bevelSize: 0.02,
+            bevelOffset: 0,
+            bevelSegments: 5
+        }
+    )
+    textGeometry.center();
+    return textGeometry;
+}
 
 function instantiateText(
     font: any,
+    message: string,
     material: THREE.MeshStandardMaterial,
     ) : THREE.Mesh {
-    const textGeometry = new TextGeometry(
-            "David Lacroix",
-            {
-                font: font,
-                size: 0.5,
-                height: 0.2,
-                curveSegments: 12,
-                bevelEnabled: true,
-                bevelThickness: 0.01,
-                bevelSize: 0.02,
-                bevelOffset: 0,
-                bevelSegments: 5
-            }
-        )
-        textGeometry.center();
-        console.log(textGeometry.boundingBox.max.x)
+    const textGeometry = createGeometry(font, message);
         let text = new THREE.Mesh(textGeometry, material);
         //text.rotateOnAxis(new THREE.Vector3(1,0,0), -(Math.PI / 4));
         return text;
+}
+
+function computeWidth(font: any, message: string) : number {
+    return createGeometry(font, message).boundingBox.max.x;
 }
