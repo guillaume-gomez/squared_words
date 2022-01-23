@@ -2,18 +2,27 @@ import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import gsap from 'gsap';
+import * as dat from 'lil-gui';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { times } from "lodash";
+
 
 interface CustomMesh {
     mesh : THREE.Mesh;
     originalPosition: THREE.Vector3;
 }
 
-const nbText = 20;
-const depth = 20.0;
-const ZSpeed = -1;
+
+const backgroundColor = 0x723bf2;
+const textColor = 0xe85eb0;
+const nbText = 10;
+let depth = 20.0;
+let ZSpeed = -1;
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const message = urlParams.get("text") || "Infinite loop";
 
 
 const top = new THREE.Vector3(1,0,0);
@@ -29,53 +38,13 @@ const rightPosition = new THREE.Vector3(1,0,0);
 let texts : CustomMesh[] = [];
 // Scene
 let scene = new THREE.Scene();
-scene.background = new THREE.Color(0x723bf2);
-
-// load font
-const fontLoader = new FontLoader();
-
-fontLoader.load(
-    '/fonts/helvetiker_regular.typeface.json',
-    (font) =>
-    {
-       const message = "Sometimes I wish I was dead";
-       const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: 0xe85eb0 } );
-
-
-       const textSize = computeWidth(font, message);
-       const configs = [
-           { position: topPosition.multiplyScalar(textSize), rotation: top },
-           { position: leftPosition.multiplyScalar(textSize), rotation: left },
-           { position: rightPosition.multiplyScalar(textSize), rotation: right },
-           { position: bottomPosition.multiplyScalar(textSize), rotation: bottom }
-       ];
-
-       const interval = depth / nbText;
-       configs.map(({ position, rotation }) => {
-           times(nbText, Number).map((it: number) => {
-
-               let text = instantiateText(font, message, textMaterial);
-               text.position.set(position.x - (position.x * it * interval * 0.1), position.y - (position.y * it * interval * 0.1), -it * interval );
-               text.scale.set((20 - it) / 20,1, 0.05);
-
-               text.rotateOnAxis(rotation, (Math.PI / 2));
-
-               texts.push({ mesh: text, originalPosition: position });
-               scene.add(text);
-           })
-
-       })
-    }
-);
+scene.background = new THREE.Color(backgroundColor);
 
 // Sizes
 const sizes = {
     width: window.innerWidth,
     height: window.innerHeight
 }
-// Axe Helper
-//const axesHelper = new THREE.AxesHelper(2);
-//scene.add(axesHelper);
 
 // lights
 const pointLight = new THREE.PointLight( 0xf794ca, 1, 25 );
@@ -102,6 +71,51 @@ renderer.setSize(sizes.width, sizes.height);
 
 // Controls
 const controls = new OrbitControls( camera, renderer.domElement );
+
+const parameters = {
+    backgroundColor,
+    textColor,
+    ZSpeed,
+    depth
+}
+
+const gui = new dat.GUI();
+gui.title("Customize");
+
+gui.addColor(parameters, 'backgroundColor').
+    onChange(() =>
+    {
+        scene.background = new THREE.Color(parameters.backgroundColor);
+    });
+
+gui.addColor(parameters, 'textColor').
+    onChange(() =>
+    {
+        texts.forEach(text => {
+           (text.mesh.material as any).color.set(parameters.textColor)
+
+        });
+    });
+
+gui.add(parameters, 'ZSpeed').
+    min(-10).
+    max(0).
+    onFinishChange(() =>
+    {
+        ZSpeed = parameters.ZSpeed;
+    });
+
+gui.add(parameters, 'depth').
+    min(10).
+    max(100).
+    onFinishChange(() =>
+    {
+        depth = parameters.depth;
+    });
+
+
+
+init();
 
 const clock = new THREE.Clock();
 function tick()
@@ -211,4 +225,48 @@ function instantiateText(
 
 function computeWidth(font: any, message: string) : number {
     return createGeometry(font, message).boundingBox.max.x;
+}
+
+function init() {
+    // load font
+    const fontLoader = new FontLoader();
+
+    fontLoader.load(
+    '/fonts/helvetiker_regular.typeface.json',
+    (font) =>
+    {
+       const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: textColor } );
+
+
+       const textSize = computeWidth(font, message);
+       const configs = [
+           { position: topPosition.multiplyScalar(textSize), rotation: top },
+           { position: leftPosition.multiplyScalar(textSize), rotation: left },
+           { position: rightPosition.multiplyScalar(textSize), rotation: right },
+           { position: bottomPosition.multiplyScalar(textSize), rotation: bottom }
+       ];
+
+       const interval = depth / nbText;
+       configs.map(({ position, rotation }) => {
+           times(nbText, Number).map((it: number) => {
+
+               let text = instantiateText(font, message, textMaterial);
+               text.position.set(position.x - (position.x * it * interval * 0.1), position.y - (position.y * it * interval * 0.1), -it * interval );
+               text.scale.set((20 - it) / 20,1, 0.05);
+
+               text.rotateOnAxis(rotation, (Math.PI / 2));
+
+               texts.push({ mesh: text, originalPosition: position });
+               scene.add(text);
+           })
+       })
+    });
+}
+
+function reset() {
+    // remove old geometryMesh
+    texts.forEach(text => {
+        scene.remove(scene.getObjectById(text.mesh.id))
+    });
+
 }
