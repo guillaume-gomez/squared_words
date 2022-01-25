@@ -13,9 +13,9 @@ interface CustomMesh {
 }
 
 const backgroundColor = 0x723bf2;
-const textColor = 0xe85eb0;
-let nbText = 10;
 const depth = 10.0;
+let nbText = 10;
+let textColor = 0xe85eb0;
 let message = "Infinite Loop";
 let ZSpeed = -1;
 
@@ -58,23 +58,26 @@ const renderer = new THREE.WebGLRenderer({
 
 renderer.setSize(sizes.width, sizes.height);
 
-// Controls
-const controls = new OrbitControls( camera, renderer.domElement );
+// Controls (Debug Only)
+//const controls = new OrbitControls( camera, renderer.domElement );
 
+// LIL GUI
 const parameters = {
     backgroundColor,
     textColor,
     ZSpeed,
+    ZCamera: camera.position.z,
     message,
     saveMessage() {
         clearTexts();
-        init(message, nbText);
+        init(message, nbText, textColor);
     },
     nbText,
     saveNbText() {
         clearTexts();
-        init(message, nbText);
-    }
+        init(message, nbText, textColor);
+    },
+    
 
 }
 
@@ -90,10 +93,18 @@ gui.addColor(parameters, 'backgroundColor').
 gui.addColor(parameters, 'textColor').
     onChange(() =>
     {
+        textColor = parameters.textColor;
         texts.forEach(text => {
            (text.mesh.material as any).color.set(parameters.textColor)
-
         });
+    });
+
+gui.add(parameters, 'ZCamera').
+    min(0).
+    max(10).
+    onChange(() =>
+    {
+        camera.position.z = parameters.ZCamera;
     });
 
 gui.add(parameters, 'ZSpeed').
@@ -121,6 +132,7 @@ nbTextFolder.add(parameters, 'nbText').
     });
 nbTextFolder.add(parameters, 'saveNbText');
 
+// End lil gui
 
 const clock = new THREE.Clock();
 function tick()
@@ -153,7 +165,7 @@ function tick()
 
 
 window.onload = () => {
-    init(message, nbText)
+    init(message, nbText, textColor)
     .then(() => {
         console.log("tick")
         tick();
@@ -235,7 +247,7 @@ function clearTexts() {
     })
 }
 
-async function init(message: string, nbText: number) {
+async function init(message: string, nbText: number, textColor: number) {
    const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: textColor } );
    const textGeometry = await generateGeometry(message);
 
