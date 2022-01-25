@@ -17,12 +17,12 @@ interface CustomMesh {
 const backgroundColor = 0x723bf2;
 const textColor = 0xe85eb0;
 const nbText = 10;
-let depth = 20.0;
+const depth = 10.0;
 let ZSpeed = -1;
 
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-const message = urlParams.get("text") || "Infinite loop";
+const message = urlParams.get("text") || "Infinite Loop";
 
 
 const top = new THREE.Vector3(1,0,0);
@@ -59,7 +59,7 @@ const pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
-camera.position.z = 3;
+camera.position.z = 2;
 scene.add(camera);
 
 // Renderer
