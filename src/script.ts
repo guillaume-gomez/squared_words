@@ -139,8 +139,7 @@ function tick()
             texts[i].mesh.position.set(x, y , z);
             texts[i].mesh.scale.x = 1;
         }
-        //console.log( 1 - (texts[i].originalPosition.z - newZ  )/depth)
-        texts[i].mesh.scale.x = 1 - (texts[i].originalPosition.z - newZ) /depth;
+        texts[i].mesh.scale.x = 1 - zRatio;
         
     }
     // Call tick again on the next frame
