@@ -902,6 +902,18 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@seregpie/three.text-sprite@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@seregpie/three.text-sprite/-/three.text-sprite-3.2.0.tgz#a1826392bfd5afb54d66392a3c33527f65d33628"
+  integrity sha512-ozQq7JFKGCltCvT3DG5SC77WnSJfZhYpSabhp+I1iZ9tTMxiPJqyEscmcMC+Rdxy1eYCBmZKGKBBcMLLrd5GuA==
+  dependencies:
+    "@seregpie/three.text-texture" "^3.2.0"
+
+"@seregpie/three.text-texture@^3.2.0":
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/@seregpie/three.text-texture/-/three.text-texture-3.2.1.tgz#aedb9b26ec8f16c158ca59721b506d2d40f76f0d"
+  integrity sha512-+rBfu63PolUyg6WB56SxYIIGGw7BMiFMeoj6AcxGooGs1apnudu024EMY/6dr1KnpIa9lNIwSgJETeaclgT/BQ==
+
 "@types/eslint-scope@^3.7.0":
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/@types/eslint-scope/-/eslint-scope-3.7.1.tgz#8dc390a7b4f9dd9f1284629efce982e41612116e"
@@ -2598,6 +2610,11 @@ kind-of@^6.0.2:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
+
+lil-gui@^0.16.0:
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/lil-gui/-/lil-gui-0.16.0.tgz#ac3f38e4b73331688f10f4430b1324cf888d3c41"
+  integrity sha512-wDySFozDfOed8UymoMprgQ+xuEZhbOP9h6cagszu/gIRpGjfoo8lHPYXXJN5OluHoM1Z4Y2ac0FJhiMQC5Ac0Q==
 
 loader-runner@^4.2.0:
   version "4.2.0"
