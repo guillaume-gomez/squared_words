@@ -7,7 +7,6 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { times } from "lodash";
 
-
 interface CustomMesh {
     mesh : THREE.Mesh;
     originalPosition: THREE.Vector3;
@@ -105,17 +104,6 @@ gui.add(parameters, 'ZSpeed').
         ZSpeed = parameters.ZSpeed;
     });
 
-gui.add(parameters, 'depth').
-    min(10).
-    max(100).
-    onFinishChange(() =>
-    {
-        depth = parameters.depth;
-    });
-
-
-
-init();
 
 const clock = new THREE.Clock();
 function tick()
@@ -148,7 +136,11 @@ function tick()
 
 
 window.onload = () => {
-    tick();
+    init()
+    .then(() => {
+        console.log("tick")
+        tick();
+    });
 }
 
 window.addEventListener('resize', () =>
@@ -191,81 +183,53 @@ window.addEventListener('dblclick', () =>
     }
 })
 
-
-function createGeometry(font: any, message: string): TextGeometry {
-    const textGeometry = new TextGeometry(
-        message,
-        {
-            font: font,
-            size: 0.5,
-            height: 0.2,
-            curveSegments: 12,
-            bevelEnabled: true,
-            bevelThickness: 0.01,
-            bevelSize: 0.02,
-            bevelOffset: 0,
-            bevelSegments: 5
-        }
-    )
-    textGeometry.center();
-    return textGeometry;
-}
-
-function instantiateText(
-    font: any,
-    message: string,
-    material: THREE.MeshStandardMaterial,
-    ) : THREE.Mesh {
-    const textGeometry = createGeometry(font, message);
-        let text = new THREE.Mesh(textGeometry, material);
-        //text.rotateOnAxis(new THREE.Vector3(1,0,0), -(Math.PI / 4));
-        return text;
-}
-
-function computeWidth(font: any, message: string) : number {
-    return createGeometry(font, message).boundingBox.max.x;
-}
-
-function init() {
+async function init() {
     // load font
     const fontLoader = new FontLoader();
+    return new Promise(resolve => {
+        fontLoader.load(
+        '/fonts/helvetiker_regular.typeface.json',
+        (font) =>
+        {
+           const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: textColor } );
+           const textGeometry =  new TextGeometry(
+                message,
+                {
+                    font: font,
+                    size: 0.5,
+                    height: 0.2,
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 0.01,
+                    bevelSize: 0.02,
+                    bevelOffset: 0,
+                    bevelSegments: 5
+                }
+            )
+            textGeometry.center();
 
-    fontLoader.load(
-    '/fonts/helvetiker_regular.typeface.json',
-    (font) =>
-    {
-       const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: textColor } );
 
+           const textSize = textGeometry.boundingBox.max.x;
+           const configs = [
+               { position: topPosition.multiplyScalar(textSize), rotation: top },
+               { position: leftPosition.multiplyScalar(textSize), rotation: left },
+               { position: rightPosition.multiplyScalar(textSize), rotation: right },
+               { position: bottomPosition.multiplyScalar(textSize), rotation: bottom }
+           ];
 
-       const textSize = computeWidth(font, message);
-       const configs = [
-           { position: topPosition.multiplyScalar(textSize), rotation: top },
-           { position: leftPosition.multiplyScalar(textSize), rotation: left },
-           { position: rightPosition.multiplyScalar(textSize), rotation: right },
-           { position: bottomPosition.multiplyScalar(textSize), rotation: bottom }
-       ];
+           const interval = depth / nbText;
+           configs.map(({ position, rotation }) => {
+               times(nbText, Number).map((it: number) => {
+                   let text = new THREE.Mesh(textGeometry, textMaterial);
+                   text.position.set(position.x - (position.x * it * interval), position.y - (position.y * it * interval), -it * interval );
+                   text.scale.set((20 - it) / 20,1, 0.05);
 
-       const interval = depth / nbText;
-       configs.map(({ position, rotation }) => {
-           times(nbText, Number).map((it: number) => {
-
-               let text = instantiateText(font, message, textMaterial);
-               text.position.set(position.x - (position.x * it * interval * 0.1), position.y - (position.y * it * interval * 0.1), -it * interval );
-               text.scale.set((20 - it) / 20,1, 0.05);
-
-               text.rotateOnAxis(rotation, (Math.PI / 2));
-
-               texts.push({ mesh: text, originalPosition: position });
-               scene.add(text);
+                   text.rotateOnAxis(rotation, (Math.PI / 2));
+                   texts.push({ mesh: text, originalPosition: position });
+                   scene.add(text);
+               })
            })
-       })
+           resolve("ok");
+        });
     });
-}
-
-function reset() {
-    // remove old geometryMesh
-    texts.forEach(text => {
-        scene.remove(scene.getObjectById(text.mesh.id))
-    });
-
 }
