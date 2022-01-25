@@ -12,27 +12,17 @@ interface CustomMesh {
     originalPosition: THREE.Vector3;
 }
 
-
 const backgroundColor = 0x723bf2;
 const textColor = 0xe85eb0;
-const nbText = 10;
+let nbText = 10;
 const depth = 10.0;
+let message = "Infinite Loop";
 let ZSpeed = -1;
-
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
-const message = urlParams.get("text") || "Infinite Loop";
-
 
 const top = new THREE.Vector3(1,0,0);
 const bottom = new THREE.Vector3(-1,0,0);
 const left = new THREE.Vector3(0,0,-1);
 const right = new THREE.Vector3(0,0,1);
-
-const topPosition = new THREE.Vector3(0,1,0);
-const bottomPosition = new THREE.Vector3(0,-1,0);
-const leftPosition = new THREE.Vector3(-1,0,0);
-const rightPosition = new THREE.Vector3(1,0,0);
 
 let texts : CustomMesh[] = [];
 // Scene
@@ -75,7 +65,17 @@ const parameters = {
     backgroundColor,
     textColor,
     ZSpeed,
-    depth
+    message,
+    saveMessage() {
+        clearTexts();
+        init(message, nbText);
+    },
+    nbText,
+    saveNbText() {
+        clearTexts();
+        init(message, nbText);
+    }
+
 }
 
 const gui = new dat.GUI();
@@ -103,6 +103,23 @@ gui.add(parameters, 'ZSpeed').
     {
         ZSpeed = parameters.ZSpeed;
     });
+
+const messageFolder = gui.addFolder("Message option");
+messageFolder.add(parameters, 'message').
+    onChange(() => {
+        message = parameters.message;
+    });
+messageFolder.add(parameters, 'saveMessage');
+
+const nbTextFolder = gui.addFolder("Number of text");
+nbTextFolder.add(parameters, 'nbText').
+    min(10).
+    max(25).
+    step(1).
+    onChange(() => {
+        nbText = parameters.nbText;
+    });
+nbTextFolder.add(parameters, 'saveNbText');
 
 
 const clock = new THREE.Clock();
@@ -136,7 +153,7 @@ function tick()
 
 
 window.onload = () => {
-    init()
+    init(message, nbText)
     .then(() => {
         console.log("tick")
         tick();
@@ -183,10 +200,9 @@ window.addEventListener('dblclick', () =>
     }
 })
 
-async function init() {
-    // load font
+async function generateGeometry(message: string) {
     const fontLoader = new FontLoader();
-    return new Promise(resolve => {
+    const result : TextGeometry = await new Promise(resolve => {
         fontLoader.load(
         '/fonts/helvetiker_regular.typeface.json',
         (font) =>
@@ -207,29 +223,47 @@ async function init() {
                 }
             )
             textGeometry.center();
-
-
-           const textSize = textGeometry.boundingBox.max.x;
-           const configs = [
-               { position: topPosition.multiplyScalar(textSize), rotation: top },
-               { position: leftPosition.multiplyScalar(textSize), rotation: left },
-               { position: rightPosition.multiplyScalar(textSize), rotation: right },
-               { position: bottomPosition.multiplyScalar(textSize), rotation: bottom }
-           ];
-
-           const interval = depth / nbText;
-           configs.map(({ position, rotation }) => {
-               times(nbText, Number).map((it: number) => {
-                   let text = new THREE.Mesh(textGeometry, textMaterial);
-                   text.position.set(position.x - (position.x * it * interval), position.y - (position.y * it * interval), -it * interval );
-                   text.scale.set((20 - it) / 20,1, 0.05);
-
-                   text.rotateOnAxis(rotation, (Math.PI / 2));
-                   texts.push({ mesh: text, originalPosition: position });
-                   scene.add(text);
-               })
-           })
-           resolve("ok");
+            resolve(textGeometry);
         });
-    });
+   });
+   return result;
+}
+
+function clearTexts() {
+    texts.forEach(text => {
+        scene.remove(scene.getObjectById(text.mesh.id));
+    })
+}
+
+async function init(message: string, nbText: number) {
+   const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: textColor } );
+   const textGeometry = await generateGeometry(message);
+
+   const textSize = textGeometry.boundingBox.max.x;
+
+   const topPosition = new THREE.Vector3(0,1,0);
+    const bottomPosition = new THREE.Vector3(0,-1,0);
+    const leftPosition = new THREE.Vector3(-1,0,0);
+    const rightPosition = new THREE.Vector3(1,0,0);
+
+
+   const configs = [
+       { position: topPosition.multiplyScalar(textSize), rotation: top },
+       { position: leftPosition.multiplyScalar(textSize), rotation: left },
+       { position: rightPosition.multiplyScalar(textSize), rotation: right },
+       { position: bottomPosition.multiplyScalar(textSize), rotation: bottom }
+   ];
+
+   const interval = depth / nbText;
+   configs.map(({ position, rotation }) => {
+       times(nbText, Number).map((it: number) => {
+           let text = new THREE.Mesh(textGeometry, textMaterial);
+           text.position.set(position.x - (position.x * it * interval), position.y - (position.y * it * interval), -it * interval );
+           text.scale.set((20 - it) / 20,1, 0.05);
+
+           text.rotateOnAxis(rotation, (Math.PI / 2));
+           texts.push({ mesh: text, originalPosition: position });
+           scene.add(text);
+       })
+   })
 }
