@@ -216,7 +216,7 @@ async function generateGeometry(message: string) {
     const fontLoader = new FontLoader();
     const result : TextGeometry = await new Promise(resolve => {
         fontLoader.load(
-        '/fonts/helvetiker_regular.typeface.json',
+        './fonts/helvetiker_regular.typeface.json',
         (font) =>
         {
            const textMaterial = new THREE.MeshStandardMaterial({ wireframe: false, color: textColor } );
