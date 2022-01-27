@@ -36,10 +36,10 @@ const sizes = {
 }
 
 // lights
-const pointLight = new THREE.PointLight( 0xf794ca, 1, 25 );
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.75)
+const pointLight = new THREE.PointLight( 0xffffff, 1, 10);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.80)
 scene.add(ambientLight)
-pointLight.position.set( 0, 0, 1 );
+pointLight.position.set( 0, 0, 2 );
 scene.add( pointLight );
 
 const sphereSize = 10;
