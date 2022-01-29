@@ -12,12 +12,21 @@ interface CustomMesh {
     originalPosition: THREE.Vector3;
 }
 
-const backgroundColor = 0x723bf2;
+const textColorParam = "text-color";
+const backgroundColorParam = "background-color";
+const nbTextParam = "nb-text";
+const messageParam = "message";
+const ZSpeedParam = "z-speed";
+const ZCameraParam = "z-camera";
+
 const depth = 10.0;
-let nbText = 10;
+let backgroundColor = 0x723bf2;
 let textColor = 0xe85eb0;
+let nbText = 10;
 let message = "Infinite Loop";
 let ZSpeed = -1;
+let ZCamera = 2;
+
 
 const top = new THREE.Vector3(1,0,0);
 const bottom = new THREE.Vector3(-1,0,0);
@@ -27,7 +36,6 @@ const right = new THREE.Vector3(0,0,1);
 let texts : CustomMesh[] = [];
 // Scene
 let scene = new THREE.Scene();
-scene.background = new THREE.Color(backgroundColor);
 
 // Sizes
 const sizes = {
@@ -48,7 +56,7 @@ const pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
-camera.position.z = 2;
+camera.position.z = ZCamera;
 scene.add(camera);
 
 // Renderer
@@ -60,79 +68,6 @@ renderer.setSize(sizes.width, sizes.height);
 
 // Controls (Debug Only)
 //const controls = new OrbitControls( camera, renderer.domElement );
-
-// LIL GUI
-const parameters = {
-    backgroundColor,
-    textColor,
-    ZSpeed,
-    ZCamera: camera.position.z,
-    message,
-    saveMessage() {
-        clearTexts();
-        init(message, nbText, textColor);
-    },
-    nbText,
-    saveNbText() {
-        clearTexts();
-        init(message, nbText, textColor);
-    },
-    
-
-}
-
-const gui = new dat.GUI();
-gui.title("Customize");
-
-gui.addColor(parameters, 'backgroundColor').
-    onChange(() =>
-    {
-        scene.background = new THREE.Color(parameters.backgroundColor);
-    });
-
-gui.addColor(parameters, 'textColor').
-    onChange(() =>
-    {
-        textColor = parameters.textColor;
-        texts.forEach(text => {
-           (text.mesh.material as any).color.set(parameters.textColor)
-        });
-    });
-
-gui.add(parameters, 'ZCamera').
-    min(0).
-    max(10).
-    onChange(() =>
-    {
-        camera.position.z = parameters.ZCamera;
-    });
-
-gui.add(parameters, 'ZSpeed').
-    min(-10).
-    max(0).
-    onFinishChange(() =>
-    {
-        ZSpeed = parameters.ZSpeed;
-    });
-
-const messageFolder = gui.addFolder("Message option");
-messageFolder.add(parameters, 'message').
-    onChange(() => {
-        message = parameters.message;
-    });
-messageFolder.add(parameters, 'saveMessage');
-
-const nbTextFolder = gui.addFolder("Number of text");
-nbTextFolder.add(parameters, 'nbText').
-    min(10).
-    max(25).
-    step(1).
-    onChange(() => {
-        nbText = parameters.nbText;
-    });
-nbTextFolder.add(parameters, 'saveNbText');
-
-// End lil gui
 
 const clock = new THREE.Clock();
 function tick()
@@ -165,9 +100,11 @@ function tick()
 
 
 window.onload = () => {
+    parseUrlParameters();
+    initLigGui();
+    scene.background = new THREE.Color(backgroundColor);
     init(message, nbText, textColor)
     .then(() => {
-        console.log("tick")
         tick();
     });
 }
@@ -278,4 +215,100 @@ async function init(message: string, nbText: number, textColor: number) {
            scene.add(text);
        })
    })
+}
+
+function parseUrlParameters() {
+    const queryString = window.location.search
+    const urlParams = new URLSearchParams(queryString);
+    backgroundColor = parseFloat(urlParams.get(backgroundColorParam)) || backgroundColor;
+    textColor = parseFloat(urlParams.get(textColorParam)) || textColor;
+    nbText = parseInt(urlParams.get(nbTextParam)) || nbText;
+    message = urlParams.get(messageParam) || message;
+    ZSpeed = parseFloat(urlParams.get(ZSpeedParam)) || ZSpeed;
+    ZCamera = parseFloat(urlParams.get(ZCameraParam)) || ZCamera;
+}
+
+function updateUrlParams(key: string, value: string) {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.delete(key);
+    urlParams.append(key, value)
+    window.history.replaceState({}, '', `${window.location.origin}?${urlParams.toString()}`);
+}
+
+function initLigGui() {
+    // LIL GUI
+    const parameters = {
+        backgroundColor,
+        textColor,
+        ZSpeed,
+        ZCamera,
+        message,
+        saveMessage() {
+            clearTexts();
+            init(message, nbText, textColor);
+            updateUrlParams(messageParam, message);
+        },
+        nbText,
+        saveNbText() {
+            clearTexts();
+            init(message, nbText, textColor);
+            updateUrlParams(nbTextParam, nbText.toString());
+        },
+    }
+
+    const gui = new dat.GUI();
+    gui.title("Customize");
+
+    gui.addColor(parameters, 'backgroundColor').
+        onChange(() =>
+        {
+            scene.background = new THREE.Color(parameters.backgroundColor);
+            updateUrlParams(backgroundColorParam, parameters.backgroundColor.toString());
+        });
+
+    gui.addColor(parameters, 'textColor').
+        onChange(() =>
+        {
+            texts.forEach(text => {
+               (text.mesh.material as any).color.set(parameters.textColor)
+            });
+            textColor = parameters.textColor;
+            updateUrlParams(textColorParam, textColor.toString());
+        });
+
+    gui.add(parameters, 'ZCamera').
+        min(0).
+        max(10).
+        onChange(() =>
+        {
+            camera.position.z = parameters.ZCamera;
+            ZCamera = parameters.ZCamera;
+            updateUrlParams(ZCameraParam, ZCamera.toString());
+        });
+
+    gui.add(parameters, 'ZSpeed').
+        min(-10).
+        max(0).
+        onFinishChange(() =>
+        {
+            ZSpeed = parameters.ZSpeed;
+            updateUrlParams(ZSpeedParam, ZSpeed.toString());
+        });
+
+    const messageFolder = gui.addFolder("Message option");
+    messageFolder.add(parameters, 'message').
+        onChange(() => {
+            message = parameters.message;
+        });
+    messageFolder.add(parameters, 'saveMessage');
+
+    const nbTextFolder = gui.addFolder("Number of text");
+    nbTextFolder.add(parameters, 'nbText').
+        min(10).
+        max(25).
+        step(1).
+        onChange(() => {
+            nbText = parameters.nbText;
+        });
+    nbTextFolder.add(parameters, 'saveNbText');
 }
