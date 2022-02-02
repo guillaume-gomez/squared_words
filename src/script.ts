@@ -223,7 +223,7 @@ function parseUrlParameters() {
     backgroundColor = parseFloat(urlParams.get(backgroundColorParam)) || backgroundColor;
     textColor = parseFloat(urlParams.get(textColorParam)) || textColor;
     nbText = parseInt(urlParams.get(nbTextParam)) || nbText;
-    message = urlParams.get(messageParam) || message;
+    message = sanitizeMessage(urlParams.get(messageParam));
     ZSpeed = parseFloat(urlParams.get(ZSpeedParam)) || ZSpeed;
     ZCamera = parseFloat(urlParams.get(ZCameraParam)) || ZCamera;
 }
@@ -232,7 +232,22 @@ function updateUrlParams(key: string, value: string) {
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.delete(key);
     urlParams.append(key, value)
-    window.history.replaceState({}, '', `${window.location.origin}?${urlParams.toString()}`);
+    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+}
+
+function sanitizeMessage(str: string | null) : string {
+
+    if(!str || str.length < 1) {
+       return "Infinite Loop";
+    }
+    
+    if(str.length > 1 && str.length <= 75) {
+        return str;
+    }
+
+    if(str.length >= 75) {
+        return str.substring(0, 75);
+    }
 }
 
 function initLigGui() {
@@ -298,7 +313,7 @@ function initLigGui() {
     const messageFolder = gui.addFolder("Message option");
     messageFolder.add(parameters, 'message').
         onChange(() => {
-            message = parameters.message;
+            message = sanitizeMessage(parameters.message);
         });
     messageFolder.add(parameters, 'saveMessage');
 
