@@ -223,7 +223,7 @@ function parseUrlParameters() {
     backgroundColor = parseFloat(urlParams.get(backgroundColorParam)) || backgroundColor;
     textColor = parseFloat(urlParams.get(textColorParam)) || textColor;
     nbText = parseInt(urlParams.get(nbTextParam)) || nbText;
-    message = urlParams.get(messageParam) || message;
+    message = sanitizeMessage(urlParams.get(messageParam));
     ZSpeed = parseFloat(urlParams.get(ZSpeedParam)) || ZSpeed;
     ZCamera = parseFloat(urlParams.get(ZCameraParam)) || ZCamera;
 }
@@ -232,7 +232,22 @@ function updateUrlParams(key: string, value: string) {
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.delete(key);
     urlParams.append(key, value)
-    window.history.replaceState({}, '', `${window.location.origin}?${urlParams.toString()}`);
+    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+}
+
+function sanitizeMessage(str: string | null) : string {
+
+    if(!str || str.length < 1) {
+       return "Infinite Loop";
+    }
+    
+    if(str.length > 1 && str.length <= 75) {
+        return str;
+    }
+
+    if(str.length >= 75) {
+        return str.substring(0, 75);
+    }
 }
 
 function initLigGui() {
@@ -254,12 +269,22 @@ function initLigGui() {
             init(message, nbText, textColor);
             updateUrlParams(nbTextParam, nbText.toString());
         },
+        shareLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url);
+            const shareLinkButton = document.getElementById('lil-gui-name-9');
+            shareLinkButton.innerHTML = "Link copied to clipboard";
+            setTimeout(() => {
+                shareLinkButton.innerHTML = "Share Link";
+            }, 2500);
+        }
     }
 
     const gui = new dat.GUI();
     gui.title("Customize");
 
     gui.addColor(parameters, 'backgroundColor').
+        name("Background color").
         onChange(() =>
         {
             scene.background = new THREE.Color(parameters.backgroundColor);
@@ -267,6 +292,7 @@ function initLigGui() {
         });
 
     gui.addColor(parameters, 'textColor').
+        name("Text color").
         onChange(() =>
         {
             texts.forEach(text => {
@@ -277,6 +303,7 @@ function initLigGui() {
         });
 
     gui.add(parameters, 'ZCamera').
+        name("Depth Camera").
         min(0).
         max(10).
         onChange(() =>
@@ -287,6 +314,7 @@ function initLigGui() {
         });
 
     gui.add(parameters, 'ZSpeed').
+        name("Speed").
         min(-10).
         max(0).
         onFinishChange(() =>
@@ -298,17 +326,23 @@ function initLigGui() {
     const messageFolder = gui.addFolder("Message option");
     messageFolder.add(parameters, 'message').
         onChange(() => {
-            message = parameters.message;
+            message = sanitizeMessage(parameters.message);
         });
-    messageFolder.add(parameters, 'saveMessage');
+    messageFolder.add(parameters, 'saveMessage').
+    name("Update message");
 
     const nbTextFolder = gui.addFolder("Number of text");
     nbTextFolder.add(parameters, 'nbText').
         min(10).
         max(25).
         step(1).
+        name("Update text").
         onChange(() => {
             nbText = parameters.nbText;
         });
     nbTextFolder.add(parameters, 'saveNbText');
+
+    const shareFolder = gui.addFolder("Share the result");
+    shareFolder.add(parameters, 'shareLink' ).
+        name("Share link");
 }
