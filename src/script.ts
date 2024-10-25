@@ -340,7 +340,8 @@ function initLigGui() {
         onChange(() => {
             nbText = parameters.nbText;
         });
-    nbTextFolder.add(parameters, 'saveNbText');
+    nbTextFolder.add(parameters, 'saveNbText').
+        name("Save number of text");
 
     const shareFolder = gui.addFolder("Share the result");
     shareFolder.add(parameters, 'shareLink' ).
