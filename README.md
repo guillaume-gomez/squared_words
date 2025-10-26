@@ -1,4 +1,4 @@
-# squared_words
+# Squared Words
 
 ![screenshot](squared_words.png)
 
